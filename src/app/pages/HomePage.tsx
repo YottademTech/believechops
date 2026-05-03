@@ -1,93 +1,15 @@
+import { Link } from "react-router";
 import { Phone, Droplets, Calendar, MapPin } from 'lucide-react';
+import { FOOD_ITEMS, JUICE_ITEMS } from "@/data/menu";
+import { formatGhs } from "@/lib/money";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 
 export function HomePage() {
   const phoneNumber = "054 972 9309";
   const whatsappNumber = "233549729309";
 
-  const foodMenu = [
-    {
-      name: "Banku & Tilapia",
-      description: "Soft fermented corn dough paired with crispy grilled tilapia and fresh pepper sauce",
-      image: "https://images.unsplash.com/photo-1544025162-d76694265947?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-      tag: "Best Seller"
-    },
-    {
-      name: "Jollof Rice",
-      description: "Iconic West African rice cooked in rich tomato sauce with aromatic spices",
-      image: "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-      tag: "Popular"
-    },
-    {
-      name: "Goat Light Soup",
-      description: "Hearty goat meat slow-cooked in aromatic light soup with traditional herbs",
-      image: "https://images.unsplash.com/photo-1547592166-23ac45744acd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-      tag: null
-    },
-    {
-      name: "Fufu & Groundnut Soup",
-      description: "Smooth pounded cassava with rich, creamy groundnut soup and assorted meat",
-      image: "https://images.unsplash.com/photo-1512058564366-18510be2db19?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-      tag: "Chef's Choice"
-    },
-    {
-      name: "Waakye Special",
-      description: "Rice and beans combo served with spaghetti, gari, egg, and spicy shito sauce",
-      image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-      tag: "Popular"
-    },
-    {
-      name: "Kelewele & Grilled Chicken",
-      description: "Spiced fried plantains paired with perfectly seasoned grilled chicken",
-      image: "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-      tag: null
-    },
-  ];
-
-  const juiceMenu = [
-    {
-      name: "Ginger Pineapple Blast",
-      description: "Sweet tropical pineapple blended with fiery ginger for the ultimate immunity boost",
-      image: "https://images.unsplash.com/photo-1544145945-f90425340c7e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-      tag: "Best Seller",
-      benefits: ["Immunity Boost", "Anti-inflammatory"]
-    },
-    {
-      name: "Orange Ginger Sunrise",
-      description: "Fresh-squeezed oranges with a zingy ginger kick - your daily vitamin C powerhouse",
-      image: "https://images.unsplash.com/photo-1621506289937-a8e4df240d0b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-      tag: "Popular",
-      benefits: ["Vitamin C", "Energy Boost"]
-    },
-    {
-      name: "Watermelon Ginger Chill",
-      description: "Hydrating watermelon with subtle ginger warmth - summer in a glass",
-      image: "https://images.unsplash.com/photo-1497534446932-c925b458314e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-      tag: null,
-      benefits: ["Hydration", "Refreshing"]
-    },
-    {
-      name: "Mango Paradise",
-      description: "Creamy African mango blended to perfection with a hint of lime",
-      image: "https://images.unsplash.com/photo-1546173159-315724a31696?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-      tag: "New",
-      benefits: ["Fiber Rich", "Digestive Health"]
-    },
-    {
-      name: "Green Detox Power",
-      description: "Spinach, cucumber, apple & ginger - a cleansing blend for your wellness journey",
-      image: "https://images.unsplash.com/photo-1610970881699-44a5587cabec?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-      tag: "Healthy",
-      benefits: ["Detox", "Nutrient Dense"]
-    },
-    {
-      name: "Passion Fruit Zing",
-      description: "Tangy passion fruit with tropical notes - bold, exotic, and energizing",
-      image: "https://images.unsplash.com/photo-1622597467836-f3285f2131b8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-      tag: null,
-      benefits: ["Antioxidants", "Mood Boost"]
-    },
-  ];
+  const foodMenu = FOOD_ITEMS.slice(0, 6);
+  const juiceMenu = JUICE_ITEMS.slice(0, 6);
 
   return (
     <div className="bg-black text-white">
@@ -166,9 +88,9 @@ export function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {foodMenu.map((item, index) => (
+            {foodMenu.map((item) => (
               <div
-                key={index}
+                key={item.id}
                 className="group bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-3xl overflow-hidden hover:border-yellow-400/50 hover:shadow-2xl hover:shadow-yellow-400/10 transition-all duration-300"
               >
                 <div className="relative h-56 overflow-hidden">
@@ -186,14 +108,14 @@ export function HomePage() {
                 </div>
                 <div className="p-6">
                   <h3 className="text-xl font-bold text-white mb-2 group-hover:text-yellow-400 transition-colors">{item.name}</h3>
-                  <p className="text-gray-400 text-sm mb-5 line-clamp-2">{item.description}</p>
-                  <a
-                    href={`tel:${phoneNumber.replace(/\s/g, '')}`}
+                  <p className="text-gray-400 text-sm mb-3 line-clamp-2">{item.description}</p>
+                  <p className="text-yellow-400 font-bold text-lg mb-4 tabular-nums">{formatGhs(item.pricePesewas)}</p>
+                  <Link
+                    to="/menu"
                     className="inline-flex items-center gap-2 text-yellow-400 font-semibold hover:text-yellow-300 transition-colors"
                   >
-                    <Phone className="w-4 h-4" />
-                    Order Now
-                  </a>
+                    Add on full menu →
+                  </Link>
                 </div>
               </div>
             ))}
@@ -226,9 +148,9 @@ export function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {juiceMenu.map((item, index) => (
+            {juiceMenu.map((item) => (
               <div
-                key={index}
+                key={item.id}
                 className="group relative bg-gradient-to-br from-gray-900/80 to-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-3xl overflow-hidden hover:border-green-400/50 hover:shadow-2xl hover:shadow-green-400/10 transition-all duration-300"
               >
                 <div className="relative h-52 overflow-hidden">
@@ -258,14 +180,14 @@ export function HomePage() {
                 </div>
                 <div className="p-6">
                   <h3 className="text-xl font-bold text-white mb-2 group-hover:text-green-400 transition-colors">{item.name}</h3>
-                  <p className="text-gray-400 text-sm mb-5 line-clamp-2">{item.description}</p>
-                  <a
-                    href={`tel:${phoneNumber.replace(/\s/g, '')}`}
+                  <p className="text-gray-400 text-sm mb-3 line-clamp-2">{item.description}</p>
+                  <p className="text-green-400 font-bold text-lg mb-4 tabular-nums">{formatGhs(item.pricePesewas)}</p>
+                  <Link
+                    to="/menu"
                     className="inline-flex items-center gap-2 text-green-400 font-semibold hover:text-green-300 transition-colors"
                   >
-                    <Phone className="w-4 h-4" />
-                    Order Fresh
-                  </a>
+                    Add on full menu →
+                  </Link>
                 </div>
               </div>
             ))}

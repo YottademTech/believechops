@@ -1,10 +1,13 @@
 import { Link, useLocation } from "react-router";
-import { Menu, X, Phone } from "lucide-react";
+import { Menu, X, Phone, ShoppingBag } from "lucide-react";
 import { useState } from "react";
+import { useCart } from "@/context/CartContext";
+import { UserMenu } from "@/app/components/UserMenu";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { itemCount } = useCart();
   const phoneNumber = "054 972 9309";
 
   const navLinks = [
@@ -43,13 +46,26 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
+            <Link
+              to="/checkout"
+              className="relative bg-black text-yellow-400 border-2 border-yellow-400 px-5 py-2 rounded-full font-bold hover:bg-yellow-400 hover:text-black transition-colors flex items-center gap-2"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              Cart
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 flex items-center justify-center rounded-full bg-yellow-400 text-black text-xs font-bold">
+                  {itemCount > 99 ? "99+" : itemCount}
+                </span>
+              )}
+            </Link>
             <a
               href={`tel:${phoneNumber.replace(/\s/g, '')}`}
-              className="bg-yellow-400 text-black px-6 py-2 rounded-full font-bold hover:bg-yellow-300 transition-colors flex items-center gap-2"
+              className="bg-yellow-400 text-black px-5 py-2 rounded-full font-bold hover:bg-yellow-300 transition-colors flex items-center gap-2"
             >
               <Phone className="w-4 h-4" />
-              ORDER NOW
+              Call
             </a>
+            <UserMenu variant="desktop" />
           </div>
 
           {/* Mobile Menu Button */}
@@ -78,13 +94,22 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
+            <Link
+              to="/checkout"
+              onClick={() => setIsOpen(false)}
+              className="block w-full text-center bg-black border-2 border-yellow-400 text-yellow-400 px-4 py-3 mt-4 rounded-full font-bold hover:bg-yellow-400 hover:text-black transition-colors"
+            >
+              <ShoppingBag className="w-4 h-4 inline mr-2" />
+              Cart {itemCount > 0 ? `(${itemCount})` : ""}
+            </Link>
             <a
               href={`tel:${phoneNumber.replace(/\s/g, '')}`}
-              className="block w-full text-center bg-yellow-400 text-black px-4 py-3 mt-4 rounded-full font-bold hover:bg-yellow-300 transition-colors"
+              className="block w-full text-center bg-yellow-400 text-black px-4 py-3 mt-2 rounded-full font-bold hover:bg-yellow-300 transition-colors"
             >
               <Phone className="w-4 h-4 inline mr-2" />
-              ORDER NOW
+              Call to order
             </a>
+            <UserMenu variant="mobile" onNavigate={() => setIsOpen(false)} />
           </div>
         )}
       </div>
