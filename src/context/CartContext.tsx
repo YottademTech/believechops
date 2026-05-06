@@ -89,16 +89,25 @@ export function CartProvider({ children }: { children: ReactNode }) {
   });
 
   const syncGeneration = useRef(0);
+  // undefined = auth not yet resolved; null = confirmed logged out; string = logged in
+  const prevTokenRef = useRef<string | null | undefined>(undefined);
 
   useEffect(() => {
     if (authLoading) return;
 
     if (!token) {
       syncGeneration.current += 1;
+      prevTokenRef.current = null;
       setLines(loadCartFromStorage());
       setCartReady(true);
       return;
     }
+
+    // Merge only when transitioning from logged-out → logged-in (guest cart + server cart).
+    // On a plain page refresh prevTokenRef is undefined (first resolution) or already a token,
+    // so we replace with the server cart instead of adding to it.
+    const shouldMerge = prevTokenRef.current === null;
+    prevTokenRef.current = token;
 
     const gen = ++syncGeneration.current;
     setCartReady(false);
@@ -116,7 +125,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
           itemId: l.itemId,
           quantity: Math.min(Math.max(1, Math.floor(l.quantity)), 999),
         }));
-        setLines((prev) => mergeCartLines(serverLines, prev));
+        if (shouldMerge) {
+          setLines((prev) => mergeCartLines(serverLines, prev));
+        } else {
+          setLines(serverLines);
+        }
       } catch {
         /* keep existing lines */
       } finally {
