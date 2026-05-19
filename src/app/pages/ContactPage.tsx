@@ -1,5 +1,6 @@
 import { Phone, MapPin, MessageCircle, Send } from 'lucide-react';
 import { useState } from 'react';
+import { BUSINESS_ADDRESS_LINES } from '@/lib/contact';
 
 export function ContactPage() {
   const [formData, setFormData] = useState({
@@ -45,6 +46,19 @@ export function ContactPage() {
         </div>
       </section>
 
+      {/* Map — full width */}
+      <section className="w-full bg-black border-b border-gray-800" aria-label="Believe Chops location">
+        <iframe
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3970.7866319250124!2d-0.2558028241623261!3d5.598510733219002!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xfdf9980be124299%3A0x952696fdabd10f2b!2sBelieveChops!5e0!3m2!1sen!2sgh!4v1779229742906!5m2!1sen!2sgh"
+          className="block w-full min-h-[320px] sm:min-h-[400px] md:min-h-[480px]"
+          style={{ border: 0 }}
+          allowFullScreen
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+          title="Believe Chops on Google Maps"
+        />
+      </section>
+
       {/* Main Content */}
       <section className="py-16 md:py-24 bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -82,7 +96,9 @@ export function ContactPage() {
                   </div>
                   <div>
                     <p className="font-semibold text-white">Location</p>
-                    <p className="text-gray-400">Accra, Ghana</p>
+                    <p className="text-gray-400">
+                      {BUSINESS_ADDRESS_LINES.join(" · ")}
+                    </p>
                   </div>
                 </div>
               </div>

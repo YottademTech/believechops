@@ -102,8 +102,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify(input),
       });
       if (!res.ok) {
-        const err = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(err.error ?? "Could not send verification code");
+        const err = (await res.json().catch(() => ({}))) as {
+          error?: string;
+          retryAfterSeconds?: number;
+        };
+        const e = new Error(err.error ?? "Could not send verification code") as Error & {
+          retryAfterSeconds?: number;
+        };
+        if (typeof err.retryAfterSeconds === "number") {
+          e.retryAfterSeconds = err.retryAfterSeconds;
+        }
+        throw e;
       }
     },
     [],
@@ -164,8 +173,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify(input),
       });
       if (!res.ok) {
-        const err = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(err.error ?? "Could not send verification code");
+        const err = (await res.json().catch(() => ({}))) as {
+          error?: string;
+          retryAfterSeconds?: number;
+        };
+        const e = new Error(err.error ?? "Could not send verification code") as Error & {
+          retryAfterSeconds?: number;
+        };
+        if (typeof err.retryAfterSeconds === "number") {
+          e.retryAfterSeconds = err.retryAfterSeconds;
+        }
+        throw e;
       }
     },
     [token],

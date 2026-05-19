@@ -4,12 +4,10 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { apiFetch } from "@/lib/api";
 import { getMenuItem, type MenuItem } from "@/data/menu";
 
 export type CartLine = {
@@ -19,7 +17,7 @@ export type CartLine = {
 
 type CartContextValue = {
   lines: CartLine[];
-  /** False briefly while loading the server cart after sign-in or refresh (authenticated only). */
+  /** Always true — cart is in-memory only (no server/local persistence). */
   cartReady: boolean;
   addItem: (itemId: string, qty?: number) => void;
   removeItem: (itemId: string) => void;
@@ -32,153 +30,22 @@ type CartContextValue = {
 
 const CartContext = createContext<CartContextValue | null>(null);
 
+/** Legacy key — cleared so old persisted carts are not restored. */
 const CART_STORAGE_KEY = "believechops_cart_v1";
-const TOKEN_STORAGE_KEY = "believechops_token";
-
-function loadCartFromStorage(): CartLine[] {
-  try {
-    const raw = localStorage.getItem(CART_STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    const out: CartLine[] = [];
-    for (const row of parsed) {
-      if (
-        row &&
-        typeof row === "object" &&
-        "itemId" in row &&
-        "quantity" in row &&
-        typeof (row as CartLine).itemId === "string" &&
-        typeof (row as CartLine).quantity === "number"
-      ) {
-        const q = Math.floor((row as CartLine).quantity);
-        if (q >= 1) {
-          out.push({
-            itemId: (row as CartLine).itemId,
-            quantity: Math.min(q, 999),
-          });
-        }
-      }
-    }
-    return out;
-  } catch {
-    return [];
-  }
-}
-
-function mergeCartLines(a: CartLine[], b: CartLine[]): CartLine[] {
-  const map = new Map<string, number>();
-  for (const l of a) map.set(l.itemId, (map.get(l.itemId) ?? 0) + l.quantity);
-  for (const l of b) map.set(l.itemId, (map.get(l.itemId) ?? 0) + l.quantity);
-  return Array.from(map.entries())
-    .map(([itemId, quantity]) => ({ itemId, quantity: Math.min(quantity, 999) }))
-    .filter((l) => l.quantity >= 1);
-}
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const { token, loading: authLoading } = useAuth();
-
-  const [lines, setLines] = useState<CartLine[]>(() => {
-    if (typeof window === "undefined") return [];
-    return loadCartFromStorage();
-  });
-
-  const [cartReady, setCartReady] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return !localStorage.getItem(TOKEN_STORAGE_KEY);
-  });
-
-  const syncGeneration = useRef(0);
-  // undefined = auth not yet resolved; null = confirmed logged out; string = logged in
-  const prevTokenRef = useRef<string | null | undefined>(undefined);
+  const { loading: authLoading } = useAuth();
+  const [lines, setLines] = useState<CartLine[]>([]);
 
   useEffect(() => {
-    if (authLoading) return;
-
-    if (!token) {
-      syncGeneration.current += 1;
-      prevTokenRef.current = null;
-      setLines(loadCartFromStorage());
-      setCartReady(true);
-      return;
-    }
-
-    // Merge only when transitioning from logged-out → logged-in (guest cart + server cart).
-    // On a plain page refresh prevTokenRef is undefined (first resolution) or already a token,
-    // so we replace with the server cart instead of adding to it.
-    const shouldMerge = prevTokenRef.current === null;
-    prevTokenRef.current = token;
-
-    const gen = ++syncGeneration.current;
-    setCartReady(false);
-
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await apiFetch("/api/cart", { token });
-        if (!res.ok) throw new Error("cart_fetch_failed");
-        const data = (await res.json()) as {
-          lines?: { itemId: string; quantity: number }[];
-        };
-        if (cancelled || gen !== syncGeneration.current) return;
-        const serverLines = (data.lines ?? []).map((l) => ({
-          itemId: l.itemId,
-          quantity: Math.min(Math.max(1, Math.floor(l.quantity)), 999),
-        }));
-        if (shouldMerge) {
-          setLines((prev) => mergeCartLines(serverLines, prev));
-        } else {
-          setLines(serverLines);
-        }
-      } catch {
-        /* keep existing lines */
-      } finally {
-        if (!cancelled && gen === syncGeneration.current) {
-          setCartReady(true);
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [authLoading, token]);
-
-  /** Persist cart lines whenever they change (guest and signed-in). */
-  useEffect(() => {
-    if (typeof window === "undefined" || !cartReady) return;
     try {
-      if (lines.length === 0) {
-        localStorage.removeItem(CART_STORAGE_KEY);
-      } else {
-        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(lines));
-      }
+      localStorage.removeItem(CART_STORAGE_KEY);
     } catch {
-      /* quota */
+      /* ignore */
     }
-  }, [lines, cartReady]);
+  }, []);
 
-  useEffect(() => {
-    if (!token || !cartReady || authLoading) return;
-    const id = window.setTimeout(() => {
-      void (async () => {
-        try {
-          const res = await apiFetch("/api/cart", {
-            method: "PUT",
-            token,
-            body: JSON.stringify({ lines }),
-          });
-          if (!res.ok) {
-            const err = (await res.json().catch(() => ({}))) as { error?: string };
-            throw new Error(err.error ?? "Could not save cart");
-          }
-        } catch {
-          /* silent — cart stays local; next navigation may retry */
-        }
-      })();
-    }, 320);
-    return () => window.clearTimeout(id);
-  }, [lines, token, cartReady, authLoading]);
+  const cartReady = !authLoading;
 
   const addItem = useCallback((itemId: string, qty = 1) => {
     setLines((prev) => {

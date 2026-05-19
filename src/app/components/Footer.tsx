@@ -1,8 +1,12 @@
 import { Link } from "react-router";
-import { Phone, UtensilsCrossed } from "lucide-react";
+import { MapPin, Phone, UtensilsCrossed } from "lucide-react";
+import {
+  BUSINESS_ADDRESS_LINES,
+  BUSINESS_GOOGLE_MAPS_URL,
+  BUSINESS_PHONE_DISPLAY,
+} from "@/lib/contact";
 
 export function Footer() {
-  const phoneNumber = "054 972 9309";
 
   return (
     <footer className="bg-black border-t-2 border-yellow-400 py-8">
@@ -15,8 +19,23 @@ export function Footer() {
           Healthy Fast Food & Fresh Fruit Juices
         </p>
         <p className="text-gray-400 text-sm mb-4">
-          Made fresh with love • Call to order: {phoneNumber}
+          Made fresh with love • Call to order: {BUSINESS_PHONE_DISPLAY}
         </p>
+        <a
+          href={BUSINESS_GOOGLE_MAPS_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-start justify-center gap-2 text-gray-400 hover:text-yellow-400 transition-colors text-sm mb-4 max-w-md mx-auto"
+        >
+          <MapPin className="w-4 h-4 text-yellow-400 shrink-0 mt-0.5" />
+          <span className="text-left leading-relaxed">
+            {BUSINESS_ADDRESS_LINES.map((line) => (
+              <span key={line} className="block">
+                {line}
+              </span>
+            ))}
+          </span>
+        </a>
         <div className="flex justify-center gap-6 mb-4">
           <Link to="/" className="text-gray-400 hover:text-yellow-400 transition-colors">
             Home
@@ -29,11 +48,11 @@ export function Footer() {
           </Link>
         </div>
         <a
-          href={`tel:${phoneNumber.replace(/\s/g, '')}`}
+          href={`tel:${BUSINESS_PHONE_DISPLAY.replace(/\s/g, "")}`}
           className="inline-flex items-center gap-2 text-yellow-400 hover:text-yellow-300 transition-colors"
         >
           <Phone className="w-4 h-4" />
-          {phoneNumber}
+          {BUSINESS_PHONE_DISPLAY}
         </a>
         <p className="text-gray-600 text-xs mt-4">
           © {new Date().getFullYear()} Believe Chops. All rights reserved.

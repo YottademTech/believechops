@@ -12,6 +12,14 @@ import {
 import { getUserInitials } from "@/lib/profile";
 import { Avatar, AvatarFallback } from "@/app/components/ui/avatar";
 import { OtpInputBoxes } from "@/app/components/OtpInputBoxes";
+import { useOtpSendCooldown, getRetryAfterSeconds } from "@/hooks/useOtpSendCooldown";
+import {
+  isValidSignInEmail,
+  isValidSignInPhone,
+  normalizeEmailInput,
+  normalizePhoneInput,
+  signInContactError,
+} from "@/lib/otpValidation";
 
 export function ProfilePage() {
   const {
@@ -35,6 +43,9 @@ export function ProfilePage() {
   const [phoneCode, setPhoneCode] = useState("");
   const [phoneCodeSent, setPhoneCodeSent] = useState(false);
   const [busyPhone, setBusyPhone] = useState(false);
+
+  const emailCooldown = useOtpSendCooldown(60);
+  const phoneCooldown = useOtpSendCooldown(60);
 
   const [savedAddresses, setSavedAddresses] = useState<ApiAddress[]>([]);
   const [loadingAddresses, setLoadingAddresses] = useState(false);
@@ -249,17 +260,24 @@ export function ProfilePage() {
   }
 
   async function handleEmailSend() {
-    const trimmed = emailDraft.trim().toLowerCase();
-    if (!trimmed.includes("@")) {
-      toast.error("Enter a valid email");
+    const validationError = signInContactError("EMAIL", emailDraft);
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
+    if (!emailCooldown.canSend) {
+      toast.error(`Please wait ${emailCooldown.cooldownSeconds}s before requesting another code.`);
       return;
     }
     setBusyEmail(true);
     try {
-      await requestContactOtp({ channel: "EMAIL", email: trimmed });
+      await requestContactOtp({ channel: "EMAIL", email: normalizeEmailInput(emailDraft) });
       setEmailCodeSent(true);
+      emailCooldown.startCooldown();
       toast.success("Check your inbox for the code.");
     } catch (err) {
+      const retry = getRetryAfterSeconds(err);
+      if (retry) emailCooldown.startCooldown(retry);
       toast.error(err instanceof Error ? err.message : "Could not send code");
     } finally {
       setBusyEmail(false);
@@ -272,7 +290,7 @@ export function ProfilePage() {
     try {
       await verifyContactOtp({
         channel: "EMAIL",
-        email: trimmed,
+        email: normalizeEmailInput(emailDraft),
         code: emailCode.replace(/\D/g, ""),
       });
       toast.success("Email verified");
@@ -286,17 +304,24 @@ export function ProfilePage() {
   }
 
   async function handlePhoneSend() {
-    const trimmed = phoneDraft.trim();
-    if (trimmed.length < 10) {
-      toast.error("Use international format, e.g. +233551234567");
+    const validationError = signInContactError("SMS", phoneDraft);
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
+    if (!phoneCooldown.canSend) {
+      toast.error(`Please wait ${phoneCooldown.cooldownSeconds}s before requesting another code.`);
       return;
     }
     setBusyPhone(true);
     try {
-      await requestContactOtp({ channel: "SMS", phone: trimmed });
+      await requestContactOtp({ channel: "SMS", phone: normalizePhoneInput(phoneDraft) });
       setPhoneCodeSent(true);
+      phoneCooldown.startCooldown();
       toast.success("Check your phone for the code.");
     } catch (err) {
+      const retry = getRetryAfterSeconds(err);
+      if (retry) phoneCooldown.startCooldown(retry);
       toast.error(err instanceof Error ? err.message : "Could not send code");
     } finally {
       setBusyPhone(false);
@@ -309,7 +334,7 @@ export function ProfilePage() {
     try {
       await verifyContactOtp({
         channel: "SMS",
-        phone: trimmed,
+        phone: normalizePhoneInput(phoneDraft),
         code: phoneCode.replace(/\D/g, ""),
       });
       toast.success("Phone verified");
@@ -381,6 +406,7 @@ export function ProfilePage() {
               <input
                 type="email"
                 autoComplete="email"
+                readOnly={emailCodeSent}
                 value={emailDraft}
                 onChange={(e) => {
                   setEmailDraft(e.target.value);
@@ -393,11 +419,24 @@ export function ProfilePage() {
             </label>
             <button
               type="button"
-              disabled={busyEmail || emailMatchesVerified || !emailDraft.trim()}
-              onClick={handleEmailSend}
+              disabled={
+                busyEmail ||
+                emailMatchesVerified ||
+                !isValidSignInEmail(emailDraft) ||
+                !emailCooldown.canSend
+              }
+              onClick={() => void handleEmailSend()}
               className="w-full py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 font-semibold text-sm disabled:opacity-40"
             >
-              {busyEmail ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Send verification code"}
+              {busyEmail ? (
+                <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+              ) : emailCodeSent && !emailCooldown.canSend ? (
+                `Resend in ${emailCooldown.cooldownSeconds}s`
+              ) : emailCodeSent ? (
+                "Resend verification code"
+              ) : (
+                "Send verification code"
+              )}
             </button>
             {emailCodeSent && (
               <div className="space-y-3">
@@ -442,6 +481,7 @@ export function ProfilePage() {
               <input
                 type="tel"
                 autoComplete="tel"
+                readOnly={phoneCodeSent}
                 value={phoneDraft}
                 onChange={(e) => {
                   setPhoneDraft(e.target.value);
@@ -454,11 +494,24 @@ export function ProfilePage() {
             </label>
             <button
               type="button"
-              disabled={busyPhone || phoneMatchesVerified || phoneDraft.trim().length < 10}
-              onClick={handlePhoneSend}
+              disabled={
+                busyPhone ||
+                phoneMatchesVerified ||
+                !isValidSignInPhone(phoneDraft) ||
+                !phoneCooldown.canSend
+              }
+              onClick={() => void handlePhoneSend()}
               className="w-full py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 font-semibold text-sm disabled:opacity-40"
             >
-              {busyPhone ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Send verification code"}
+              {busyPhone ? (
+                <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+              ) : phoneCodeSent && !phoneCooldown.canSend ? (
+                `Resend in ${phoneCooldown.cooldownSeconds}s`
+              ) : phoneCodeSent ? (
+                "Resend verification code"
+              ) : (
+                "Send verification code"
+              )}
             </button>
             {phoneCodeSent && (
               <div className="space-y-3">

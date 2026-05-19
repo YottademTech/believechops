@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router";
 import { Menu, X, Phone, ShoppingBag } from "lucide-react";
-import { useState } from "react";
+import { useState, type MouseEvent } from "react";
+import { toast } from "sonner";
 import { useCart } from "@/context/CartContext";
 import { UserMenu } from "@/app/components/UserMenu";
 
@@ -9,6 +10,15 @@ export function Navbar() {
   const location = useLocation();
   const { itemCount } = useCart();
   const phoneNumber = "054 972 9309";
+
+  const handleCartClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    if (itemCount > 0) {
+      setIsOpen(false);
+      return;
+    }
+    e.preventDefault();
+    toast.warning("Your cart is empty. Add items from the menu to continue.");
+  };
 
   const navLinks = [
     { path: "/", label: "Home" },
@@ -48,6 +58,7 @@ export function Navbar() {
             ))}
             <Link
               to="/checkout"
+              onClick={handleCartClick}
               className="relative bg-black text-yellow-400 border-2 border-yellow-400 px-5 py-2 rounded-full font-bold hover:bg-yellow-400 hover:text-black transition-colors flex items-center gap-2"
             >
               <ShoppingBag className="w-4 h-4" />
@@ -96,7 +107,7 @@ export function Navbar() {
             ))}
             <Link
               to="/checkout"
-              onClick={() => setIsOpen(false)}
+              onClick={handleCartClick}
               className="block w-full text-center bg-black border-2 border-yellow-400 text-yellow-400 px-4 py-3 mt-4 rounded-full font-bold hover:bg-yellow-400 hover:text-black transition-colors"
             >
               <ShoppingBag className="w-4 h-4 inline mr-2" />
