@@ -1,15 +1,29 @@
 import { Link } from "react-router";
-import { Phone, Droplets, Calendar, MapPin } from 'lucide-react';
-import { FOOD_ITEMS, JUICE_ITEMS } from "@/data/menu";
-import { formatGhs } from "@/lib/money";
+import { toast } from "sonner";
+import { Phone, Droplets, Calendar, MapPin, ShoppingBag } from 'lucide-react';
+import { ALL_BEVERAGES_SHOWCASE, FOOD_ITEMS, JUICE_ITEMS } from "@/data/menu";
+import { useCart } from "@/context/CartContext";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+
+/** Post-hero sections: edge-to-edge on large viewports, capped on ultra-wide displays. */
+const SECTION_INNER =
+  "mx-auto w-full max-w-[1920px] px-4 sm:px-6 lg:px-8 2xl:px-12";
+
+function foodTagClass(tag: string) {
+  if (tag === "Best Seller") return "bg-yellow-400 text-black";
+  if (tag === "Chef's Choice") return "bg-orange-400 text-black";
+  if (tag === "Popular") return "bg-white/90 text-black";
+  if (tag === "Vegetarian") return "bg-green-400 text-black";
+  if (tag === "Traditional") return "bg-amber-600 text-white";
+  return "bg-gray-700 text-white";
+}
 
 export function HomePage() {
   const phoneNumber = "054 972 9309";
   const whatsappNumber = "233549729309";
-
-  const foodMenu = FOOD_ITEMS.slice(0, 6);
-  const juiceMenu = JUICE_ITEMS.slice(0, 6);
+  const { addItem } = useCart();
+  const featuredJuiceImage =
+    JUICE_ITEMS.find((j) => j.id === "juice-ginger-pineapple")?.image ?? JUICE_ITEMS[0]?.image;
 
   return (
     <div className="bg-black text-white">
@@ -55,15 +69,15 @@ export function HomePage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="rounded-2xl overflow-hidden transform hover:scale-105 transition-transform">
                 <ImageWithFallback
-                  src="https://images.unsplash.com/photo-1763048443535-1243379234e2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhZnJpY2FuJTIwdHJhZGl0aW9uYWwlMjBmb29kJTIwc291cHxlbnwxfHx8fDE3NzQwNTQxMzN8MA&ixlib=rb-4.1.0&q=80&w=1080"
-                  alt="Traditional food"
+                  src={FOOD_ITEMS[0]?.image}
+                  alt="Jollof rice with chicken"
                   className="w-full h-64 object-cover"
                 />
               </div>
               <div className="rounded-2xl overflow-hidden transform hover:scale-105 transition-transform mt-8">
                 <ImageWithFallback
-                  src="https://images.unsplash.com/photo-1687975091176-5a28a9860907?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMGZydWl0JTIwanVpY2UlMjBwaW5lYXBwbGV8ZW58MXx8fHwxNzc0MDU0MTM0fDA&ixlib=rb-4.1.0&q=80&w=1080"
-                  alt="Fresh juice"
+                  src={featuredJuiceImage}
+                  alt="Fresh ginger pineapple juice"
                   className="w-full h-64 object-cover"
                 />
               </div>
@@ -74,7 +88,7 @@ export function HomePage() {
 
       {/* Food Menu */}
       <section id="food" className="py-20 bg-gradient-to-b from-black to-gray-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className={SECTION_INNER}>
           <div className="text-center mb-16">
             <span className="inline-block bg-yellow-400/20 text-yellow-400 px-4 py-2 rounded-full text-sm font-semibold mb-4">
               Our Menu
@@ -83,58 +97,77 @@ export function HomePage() {
               Authentic <span className="text-yellow-400">Ghanaian</span> Cuisine
             </h2>
             <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              Experience the rich flavors of Ghana with our carefully crafted traditional dishes, made fresh daily with locally sourced ingredients
+              Three homestyle plates — prepared fresh to order with locally sourced ingredients
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {foodMenu.map((item) => (
-              <div
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10 xl:gap-12">
+            {FOOD_ITEMS.map((item) => (
+              <article
                 key={item.id}
-                className="group bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-3xl overflow-hidden hover:border-yellow-400/50 hover:shadow-2xl hover:shadow-yellow-400/10 transition-all duration-300"
+                className="group flex flex-col bg-gradient-to-b from-gray-900/80 to-gray-950/90 border border-gray-800 rounded-3xl overflow-hidden hover:border-yellow-400/40 hover:shadow-2xl hover:shadow-yellow-400/10 transition-all duration-300"
               >
-                <div className="relative h-56 overflow-hidden">
+                <div className="relative flex items-center justify-center min-h-[260px] sm:min-h-[300px] lg:min-h-[340px] xl:min-h-[380px] p-5 sm:p-6 bg-gradient-to-b from-zinc-900/90 via-black to-black">
                   <ImageWithFallback
                     src={item.image}
                     alt={item.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    className="w-full max-h-[min(340px,50vh)] object-contain drop-shadow-2xl transition-transform duration-500 group-hover:scale-[1.03]"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                   {item.tag && (
-                    <span className="absolute top-4 right-4 bg-yellow-400 text-black px-3 py-1 rounded-full text-xs font-bold">
+                    <span
+                      className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold shadow-lg ${foodTagClass(item.tag)}`}
+                    >
                       {item.tag}
                     </span>
                   )}
+                  <span className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-sm text-yellow-400 text-xs font-medium px-3 py-1.5 rounded-full">
+                    {item.category}
+                  </span>
                 </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-yellow-400 transition-colors">{item.name}</h3>
-                  <p className="text-gray-400 text-sm mb-3 line-clamp-2">{item.description}</p>
-                  <p className="text-yellow-400 font-bold text-lg mb-4 tabular-nums">{formatGhs(item.pricePesewas)}</p>
-                  <Link
-                    to="/menu"
-                    className="inline-flex items-center gap-2 text-yellow-400 font-semibold hover:text-yellow-300 transition-colors"
+                <div className="flex flex-1 flex-col p-6 sm:p-7 lg:p-8">
+                  <h3 className="text-xl lg:text-2xl font-bold text-white mb-3 group-hover:text-yellow-400 transition-colors">
+                    {item.name}
+                  </h3>
+                  <p className="text-gray-400 text-sm sm:text-base mb-6 flex-1 leading-relaxed">
+                    {item.description}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      addItem(item.id);
+                      toast.success(`${item.name} added to cart`);
+                    }}
+                    className="w-full inline-flex items-center justify-center gap-2 bg-yellow-400 text-black font-semibold px-5 py-3.5 rounded-full hover:bg-yellow-300 transition-colors"
                   >
-                    Add on full menu →
-                  </Link>
+                    <ShoppingBag className="w-5 h-5" />
+                    Add to cart
+                  </button>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
 
-          <div className="text-center mt-12">
-            <a
-              href="/menu"
+          <div className="text-center mt-12 flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link
+              to="/menu"
               className="inline-flex items-center gap-3 bg-yellow-400 text-black px-8 py-4 rounded-full font-bold hover:bg-yellow-300 transition-colors text-lg"
             >
-              View Full Menu →
-            </a>
+              View full menu
+            </Link>
+            <Link
+              to="/checkout"
+              className="inline-flex items-center gap-3 border border-yellow-400/60 text-yellow-400 px-8 py-4 rounded-full font-bold hover:bg-yellow-400/10 transition-colors text-lg"
+            >
+              <ShoppingBag className="w-5 h-5" />
+              Go to checkout
+            </Link>
           </div>
         </div>
       </section>
 
       {/* Juice Menu */}
       <section id="juice" className="py-20 bg-gradient-to-b from-gray-900 to-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className={SECTION_INNER}>
           <div className="text-center mb-16">
             <span className="inline-block bg-green-400/20 text-green-400 px-4 py-2 rounded-full text-sm font-semibold mb-4">
               Fresh & Natural
@@ -147,67 +180,42 @@ export function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {juiceMenu.map((item) => (
-              <div
-                key={item.id}
-                className="group relative bg-gradient-to-br from-gray-900/80 to-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-3xl overflow-hidden hover:border-green-400/50 hover:shadow-2xl hover:shadow-green-400/10 transition-all duration-300"
-              >
-                <div className="relative h-52 overflow-hidden">
-                  <ImageWithFallback
-                    src={item.image}
-                    alt={item.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                  {item.tag && (
-                    <span className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold ${
-                      item.tag === 'Best Seller' ? 'bg-yellow-400 text-black' :
-                      item.tag === 'New' ? 'bg-green-400 text-black' :
-                      item.tag === 'Healthy' ? 'bg-emerald-500 text-white' :
-                      'bg-white/90 text-black'
-                    }`}>
-                      {item.tag}
-                    </span>
-                  )}
-                  <div className="absolute bottom-4 left-4 flex gap-2">
-                    {item.benefits.map((benefit, i) => (
-                      <span key={i} className="bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full">
-                        {benefit}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-green-400 transition-colors">{item.name}</h3>
-                  <p className="text-gray-400 text-sm mb-3 line-clamp-2">{item.description}</p>
-                  <p className="text-green-400 font-bold text-lg mb-4 tabular-nums">{formatGhs(item.pricePesewas)}</p>
-                  <Link
-                    to="/menu"
-                    className="inline-flex items-center gap-2 text-green-400 font-semibold hover:text-green-300 transition-colors"
-                  >
-                    Add on full menu →
-                  </Link>
-                </div>
-              </div>
-            ))}
+          <div className="mb-12 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 xl:gap-12 w-full">
+            <figure className="rounded-2xl overflow-hidden border border-gray-700/80 bg-[#1a0a0a] shadow-2xl shadow-green-900/10 ring-1 ring-green-400/10">
+              <ImageWithFallback
+                src={ALL_BEVERAGES_SHOWCASE.redBackground}
+                alt="Believe Chops full beverage menu on red background"
+                className="w-full h-auto object-contain"
+              />
+            </figure>
+            <figure className="rounded-2xl overflow-hidden border border-gray-200/20 bg-white shadow-2xl shadow-black/30">
+              <ImageWithFallback
+                src={ALL_BEVERAGES_SHOWCASE.whiteBackground}
+                alt="Believe Chops full beverage menu on white background"
+                className="w-full h-auto object-contain"
+              />
+            </figure>
           </div>
 
-          <div className="text-center mt-12">
-            <a
-              href="/menu"
+          <p className="text-center text-gray-400 text-sm mb-10 max-w-xl mx-auto">
+            Ginger blends, tropical mixes, and more — browse individual flavours on our menu and add to your order.
+          </p>
+
+          <div className="text-center">
+            <Link
+              to="/menu"
               className="inline-flex items-center gap-3 bg-green-400 text-black px-8 py-4 rounded-full font-bold hover:bg-green-300 transition-colors text-lg"
             >
               <Droplets className="w-5 h-5" />
               View All Juices →
-            </a>
+            </Link>
           </div>
         </div>
       </section>
 
       {/* Catering Section */}
       <section id="catering" className="py-20 bg-gradient-to-b from-black to-gray-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className={SECTION_INNER}>
           {/* Section Header */}
           <div className="text-center mb-16">
             <span className="inline-block bg-yellow-400/20 text-yellow-400 px-4 py-2 rounded-full text-sm font-semibold mb-4">
@@ -315,8 +323,8 @@ export function HomePage() {
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-black rounded-full translate-x-1/2 translate-y-1/2"></div>
         </div>
 
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="text-center">
+        <div className={`${SECTION_INNER} relative`}>
+          <div className="text-center max-w-4xl mx-auto">
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-black mb-6 leading-tight">
               Ready to Taste <span className="text-white drop-shadow-lg">Perfection?</span>
             </h2>

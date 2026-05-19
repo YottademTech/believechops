@@ -3,7 +3,6 @@ import { Link } from 'react-router';
 import { toast } from 'sonner';
 import { Phone, Droplets, UtensilsCrossed, Leaf, ShoppingBag } from 'lucide-react';
 import { FOOD_ITEMS, JUICE_ITEMS } from '@/data/menu';
-import { formatGhs } from '@/lib/money';
 import { useCart } from '@/context/CartContext';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 
@@ -61,32 +60,31 @@ export function MenuPage() {
       {/* Food Menu Section */}
       {activeTab === 'food' && (
         <section className="py-16 bg-gradient-to-b from-black to-gray-900">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center gap-4 mb-12">
-              <UtensilsCrossed className="w-10 h-10 text-yellow-400" />
+          <div className="mx-auto w-full max-w-[1920px] px-4 sm:px-6 lg:px-8 2xl:px-12">
+            <div className="flex items-center gap-4 mb-10 lg:mb-14">
+              <UtensilsCrossed className="w-10 h-10 text-yellow-400 shrink-0" />
               <div>
                 <h2 className="text-3xl md:text-4xl font-bold">
                   Authentic <span className="text-yellow-400">Ghanaian</span> Cuisine
                 </h2>
-                <p className="text-gray-400 mt-1">Traditional dishes made fresh daily</p>
+                <p className="text-gray-400 mt-1">Three homestyle plates — prepared fresh to order</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10 xl:gap-12">
               {FOOD_ITEMS.map((item) => (
-                <div
+                <article
                   key={item.id}
-                  className="group bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-2xl overflow-hidden hover:border-yellow-400/50 hover:shadow-xl hover:shadow-yellow-400/5 transition-all duration-300"
+                  className="group flex flex-col bg-gradient-to-b from-gray-900/80 to-gray-950/90 border border-gray-800 rounded-3xl overflow-hidden hover:border-yellow-400/40 hover:shadow-2xl hover:shadow-yellow-400/10 transition-all duration-300"
                 >
-                  <div className="relative h-48 overflow-hidden">
+                  <div className="relative flex items-center justify-center min-h-[260px] sm:min-h-[300px] lg:min-h-[340px] xl:min-h-[380px] p-5 sm:p-6 bg-gradient-to-b from-zinc-900/90 via-black to-black">
                     <ImageWithFallback
                       src={item.image}
                       alt={item.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      className="w-full max-h-[min(340px,50vh)] object-contain drop-shadow-2xl transition-transform duration-500 group-hover:scale-[1.03]"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                     {item.tag && (
-                      <span className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold ${
+                      <span className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold shadow-lg ${
                         item.tag === 'Best Seller' ? 'bg-yellow-400 text-black' :
                         item.tag === 'Chef\'s Choice' ? 'bg-orange-400 text-black' :
                         item.tag === 'Popular' ? 'bg-white/90 text-black' :
@@ -97,31 +95,28 @@ export function MenuPage() {
                         {item.tag}
                       </span>
                     )}
-                    <span className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-yellow-400 text-xs px-2 py-1 rounded-full">
+                    <span className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-sm text-yellow-400 text-xs font-medium px-3 py-1.5 rounded-full">
                       {item.category}
                     </span>
                   </div>
-                  <div className="p-5">
-                    <h3 className="text-lg font-bold text-white mb-2 group-hover:text-yellow-400 transition-colors line-clamp-1">
+                  <div className="flex flex-1 flex-col p-6 sm:p-7 lg:p-8">
+                    <h3 className="text-xl lg:text-2xl font-bold text-white mb-3 group-hover:text-yellow-400 transition-colors">
                       {item.name}
                     </h3>
-                    <p className="text-gray-400 text-sm mb-3 line-clamp-2">{item.description}</p>
-                    <p className="text-yellow-400 font-bold text-xl mb-4 tabular-nums">
-                      {formatGhs(item.pricePesewas)}
-                    </p>
+                    <p className="text-gray-400 text-sm sm:text-base mb-6 flex-1 leading-relaxed">{item.description}</p>
                     <button
                       type="button"
                       onClick={() => {
                         addItem(item.id);
                         toast.success(`${item.name} added to cart`);
                       }}
-                      className="inline-flex items-center gap-2 bg-yellow-400 text-black text-sm font-semibold px-4 py-2 rounded-full hover:bg-yellow-300 transition-colors"
+                      className="w-full inline-flex items-center justify-center gap-2 bg-yellow-400 text-black font-semibold px-5 py-3.5 rounded-full hover:bg-yellow-300 transition-colors"
                     >
-                      <ShoppingBag className="w-4 h-4" />
+                      <ShoppingBag className="w-5 h-5" />
                       Add to cart
                     </button>
                   </div>
-                </div>
+                </article>
               ))}
             </div>
 
@@ -198,10 +193,7 @@ export function MenuPage() {
                     <h3 className="text-lg font-bold text-white mb-2 group-hover:text-green-400 transition-colors line-clamp-1">
                       {item.name}
                     </h3>
-                    <p className="text-gray-400 text-sm mb-3 line-clamp-2">{item.description}</p>
-                    <p className="text-green-400 font-bold text-xl mb-4 tabular-nums">
-                      {formatGhs(item.pricePesewas)}
-                    </p>
+                    <p className="text-gray-400 text-sm mb-4 line-clamp-2">{item.description}</p>
                     <button
                       type="button"
                       onClick={() => {
