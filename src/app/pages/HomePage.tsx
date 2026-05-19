@@ -22,8 +22,7 @@ export function HomePage() {
   const phoneNumber = "054 972 9309";
   const whatsappNumber = "233549729309";
   const { addItem } = useCart();
-  const featuredJuiceImage =
-    JUICE_ITEMS.find((j) => j.id === "juice-ginger-pineapple")?.image ?? JUICE_ITEMS[0]?.image;
+  const featuredJuice = JUICE_ITEMS[0];
 
   return (
     <div className="bg-black text-white">
@@ -76,8 +75,8 @@ export function HomePage() {
               </div>
               <div className="rounded-2xl overflow-hidden transform hover:scale-105 transition-transform mt-8">
                 <ImageWithFallback
-                  src={featuredJuiceImage}
-                  alt="Fresh ginger pineapple juice"
+                  src={featuredJuice?.image}
+                  alt={featuredJuice?.name ?? "Fresh juice"}
                   className="w-full h-64 object-cover"
                 />
               </div>
@@ -203,7 +202,7 @@ export function HomePage() {
 
           <div className="text-center">
             <Link
-              to="/menu"
+              to="/menu?tab=juice#juices"
               className="inline-flex items-center gap-3 bg-green-400 text-black px-8 py-4 rounded-full font-bold hover:bg-green-300 transition-colors text-lg"
             >
               <Droplets className="w-5 h-5" />
@@ -232,11 +231,11 @@ export function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Image */}
             <div className="relative order-2 lg:order-1">
-              <div className="rounded-3xl overflow-hidden shadow-2xl shadow-yellow-400/10">
+              <div className="rounded-3xl overflow-hidden shadow-2xl shadow-yellow-400/10 border border-gray-700/80 bg-[#1a0a0a] ring-1 ring-yellow-400/10">
                 <ImageWithFallback
-                  src="https://images.unsplash.com/photo-1576842546422-60562b9242ae?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwYXJ0eSUyMGZvb2QlMjBjYXRlcmluZ3xlbnwxfHx8fDE3NzQwNTQxMzV8MA&ixlib=rb-4.1.0&q=80&w=1080"
-                  alt="Party catering"
-                  className="w-full h-80 lg:h-[500px] object-cover"
+                  src={ALL_BEVERAGES_SHOWCASE.redBackground}
+                  alt="Believe Chops beverage menu on red background"
+                  className="w-full h-auto object-contain"
                 />
               </div>
               {/* Floating Badge */}

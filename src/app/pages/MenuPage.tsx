@@ -1,14 +1,44 @@
-import { useState } from 'react';
-import { Link } from 'react-router';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import { Phone, Droplets, UtensilsCrossed, Leaf, ShoppingBag } from 'lucide-react';
 import { FOOD_ITEMS, JUICE_ITEMS } from '@/data/menu';
 import { useCart } from '@/context/CartContext';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 
+type MenuTab = 'food' | 'juice';
+
+function tabFromSearchParam(value: string | null): MenuTab {
+  return value === 'juice' ? 'juice' : 'food';
+}
+
 export function MenuPage() {
-  const [activeTab, setActiveTab] = useState<'food' | 'juice'>('food');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState<MenuTab>(() => tabFromSearchParam(tabParam));
+  const juiceSectionRef = useRef<HTMLElement>(null);
   const { addItem } = useCart();
+
+  useEffect(() => {
+    setActiveTab(tabFromSearchParam(tabParam));
+  }, [tabParam]);
+
+  useEffect(() => {
+    if (activeTab !== 'juice') return;
+    const timer = window.setTimeout(() => {
+      juiceSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+    return () => window.clearTimeout(timer);
+  }, [activeTab]);
+
+  function selectTab(tab: MenuTab) {
+    setActiveTab(tab);
+    if (tab === 'food') {
+      setSearchParams({}, { replace: true });
+    } else {
+      setSearchParams({ tab: 'juice' }, { replace: true });
+    }
+  }
 
   const phoneNumber = "054 972 9309";
   const whatsappNumber = "233549729309";
@@ -31,7 +61,7 @@ export function MenuPage() {
             {/* Tab Navigation */}
             <div className="inline-flex bg-gray-900 rounded-full p-2 gap-2">
               <button
-                onClick={() => setActiveTab('food')}
+                onClick={() => selectTab('food')}
                 className={`flex items-center gap-2 px-8 py-4 rounded-full font-bold transition-all ${
                   activeTab === 'food'
                     ? 'bg-yellow-400 text-black'
@@ -42,7 +72,7 @@ export function MenuPage() {
                 Food Menu
               </button>
               <button
-                onClick={() => setActiveTab('juice')}
+                onClick={() => selectTab('juice')}
                 className={`flex items-center gap-2 px-8 py-4 rounded-full font-bold transition-all ${
                   activeTab === 'juice'
                     ? 'bg-green-400 text-black'
@@ -144,7 +174,11 @@ export function MenuPage() {
 
       {/* Juice Menu Section */}
       {activeTab === 'juice' && (
-        <section className="py-16 bg-gradient-to-b from-black to-gray-900">
+        <section
+          ref={juiceSectionRef}
+          id="juices"
+          className="py-16 bg-gradient-to-b from-black to-gray-900 scroll-mt-24"
+        >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-4 mb-12">
               <Leaf className="w-10 h-10 text-green-400" />
